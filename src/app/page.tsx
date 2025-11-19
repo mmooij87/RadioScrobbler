@@ -59,16 +59,16 @@ export default function Home() {
         </button>
       </header>
 
-      <main className="p-6 max-w-4xl mx-auto">
-        <div className="space-y-2">
+      <main className="p-6 max-w-7xl mx-auto">
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6">
           {loading && tracks.length === 0 ? (
             // Skeletons
-            Array.from({ length: 5 }).map((_, i) => (
-              <div key={i} className="flex items-center gap-4 p-3 rounded-md bg-white/5 animate-pulse">
-                <div className="w-12 h-12 bg-white/10 rounded" />
-                <div className="flex-1 space-y-2">
-                  <div className="h-4 bg-white/10 rounded w-1/3" />
-                  <div className="h-3 bg-white/10 rounded w-1/4" />
+            Array.from({ length: 10 }).map((_, i) => (
+              <div key={i} className="flex flex-col gap-3 p-4 rounded-md bg-white/5 animate-pulse">
+                <div className="aspect-square w-full bg-white/10 rounded-md" />
+                <div className="space-y-2">
+                  <div className="h-4 bg-white/10 rounded w-3/4" />
+                  <div className="h-3 bg-white/10 rounded w-1/2" />
                 </div>
               </div>
             ))
@@ -76,20 +76,20 @@ export default function Home() {
             tracks.map((track, index) => (
               <div
                 key={`${track.artist}-${track.title}-${index}`}
-                className="group flex items-center gap-4 p-3 rounded-md hover:bg-white/10 transition-colors"
+                className="group flex flex-col gap-3 p-4 rounded-md hover:bg-white/10 transition-colors"
               >
-                <div className="relative w-12 h-12 flex-shrink-0 bg-[#282828] rounded overflow-hidden">
+                <div className="relative aspect-square w-full bg-[#282828] rounded-md overflow-hidden shadow-lg">
                   {track.coverUrl ? (
                     <Image
                       src={track.coverUrl}
                       alt={track.collectionName || "Album Art"}
                       fill
-                      className="object-cover"
-                      unoptimized // Required for GitHub Pages export if not using a loader
+                      className="object-cover transition-transform group-hover:scale-105"
+                      unoptimized
                     />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center">
-                      <Music className="w-6 h-6 text-white/20" />
+                      <Music className="w-12 h-12 text-white/20" />
                     </div>
                   )}
 
@@ -99,25 +99,21 @@ export default function Home() {
                       className={`absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity ${playingUrl === track.previewUrl ? 'opacity-100 bg-black/60' : ''}`}
                     >
                       {playingUrl === track.previewUrl ? (
-                        <Pause className="w-6 h-6 text-white fill-current" />
+                        <Pause className="w-12 h-12 text-white fill-current" />
                       ) : (
-                        <Play className="w-6 h-6 text-white fill-current" />
+                        <Play className="w-12 h-12 text-white fill-current" />
                       )}
                     </button>
                   )}
                 </div>
 
-                <div className="flex-1 min-w-0">
-                  <div className={`font-medium truncate ${playingUrl === track.previewUrl ? 'text-green-500' : 'text-white'}`}>
+                <div className="min-w-0">
+                  <div className={`font-bold truncate text-lg ${playingUrl === track.previewUrl ? 'text-green-500' : 'text-white'}`}>
                     {track.title}
                   </div>
                   <div className="text-sm text-gray-400 truncate">
                     {track.artist}
                   </div>
-                </div>
-
-                <div className="text-sm text-gray-500 hidden sm:block w-1/3 truncate">
-                  {track.collectionName}
                 </div>
               </div>
             ))

@@ -28,13 +28,15 @@ export async function fetchPlaylist(): Promise<Track[]> {
             }
 
             if (!title || !artist) return;
-            if (artist.includes('Meld je aan') || artist.includes('Contact')) return;
+            if (artist.includes('Meld je aan') || artist.includes('Contact') || artist.includes('NaamTelefoonnummer')) return;
+            // Filter out long text blocks that are likely not artists
+            if (artist.length > 50 || title.length > 100) return;
 
             tracks.push({ artist, title });
         });
 
-        // Limit to last 20 tracks
-        const recentTracks = tracks.slice(0, 20);
+        // Limit to last 50 tracks
+        const recentTracks = tracks.slice(0, 50);
 
         // Fetch Metadata from iTunes
         const tracksWithMetadata = await Promise.all(
