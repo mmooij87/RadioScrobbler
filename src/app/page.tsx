@@ -1,63 +1,127 @@
+"use client";
+
+import { useEffect, useState, useRef } from "react";
 import Image from "next/image";
+import { Play, Pause, RefreshCw, Music } from "lucide-react";
+import { fetchPlaylist } from "@/lib/kink";
+import { Track } from "@/app/api/playlist/route";
 
 export default function Home() {
+  const [tracks, setTracks] = useState<Track[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [playingUrl, setPlayingUrl] = useState<string | null>(null);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+
+  const loadPlaylist = async () => {
+    setLoading(true);
+    const data = await fetchPlaylist();
+    setTracks(data);
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    loadPlaylist();
+    // Refresh every minute
+    const interval = setInterval(loadPlaylist, 60000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const togglePlay = (url: string) => {
+    if (playingUrl === url) {
+      audioRef.current?.pause();
+      setPlayingUrl(null);
+    } else {
+      if (audioRef.current) {
+        audioRef.current.src = url;
+        audioRef.current.play();
+      }
+      setPlayingUrl(url);
+    }
+  };
+
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+    <div className="min-h-screen bg-[#121212] text-white font-sans">
+      <audio ref={audioRef} onEnded={() => setPlayingUrl(null)} />
+
+      <header className="sticky top-0 z-10 bg-[#121212]/95 backdrop-blur-sm border-b border-white/10 p-6 flex justify-between items-center">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 bg-gradient-to-br from-red-600 to-purple-700 rounded-full flex items-center justify-center">
+            <Music className="w-6 h-6 text-white" />
+          </div>
+          <h1 className="text-2xl font-bold tracking-tight">Kink Scrobbler</h1>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+        <button
+          onClick={loadPlaylist}
+          disabled={loading}
+          className="p-2 hover:bg-white/10 rounded-full transition-colors disabled:opacity-50"
+        >
+          <RefreshCw className={`w-5 h-5 ${loading ? 'animate-spin' : ''}`} />
+        </button>
+      </header>
+
+      <main className="p-6 max-w-4xl mx-auto">
+        <div className="space-y-2">
+          {loading && tracks.length === 0 ? (
+            // Skeletons
+            Array.from({ length: 5 }).map((_, i) => (
+              <div key={i} className="flex items-center gap-4 p-3 rounded-md bg-white/5 animate-pulse">
+                <div className="w-12 h-12 bg-white/10 rounded" />
+                <div className="flex-1 space-y-2">
+                  <div className="h-4 bg-white/10 rounded w-1/3" />
+                  <div className="h-3 bg-white/10 rounded w-1/4" />
+                </div>
+              </div>
+            ))
+          ) : (
+            tracks.map((track, index) => (
+              <div
+                key={`${track.artist}-${track.title}-${index}`}
+                className="group flex items-center gap-4 p-3 rounded-md hover:bg-white/10 transition-colors"
+              >
+                <div className="relative w-12 h-12 flex-shrink-0 bg-[#282828] rounded overflow-hidden">
+                  {track.coverUrl ? (
+                    <Image
+                      src={track.coverUrl}
+                      alt={track.collectionName || "Album Art"}
+                      fill
+                      className="object-cover"
+                      unoptimized // Required for GitHub Pages export if not using a loader
+                    />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center">
+                      <Music className="w-6 h-6 text-white/20" />
+                    </div>
+                  )}
+
+                  {track.previewUrl && (
+                    <button
+                      onClick={() => togglePlay(track.previewUrl!)}
+                      className={`absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity ${playingUrl === track.previewUrl ? 'opacity-100 bg-black/60' : ''}`}
+                    >
+                      {playingUrl === track.previewUrl ? (
+                        <Pause className="w-6 h-6 text-white fill-current" />
+                      ) : (
+                        <Play className="w-6 h-6 text-white fill-current" />
+                      )}
+                    </button>
+                  )}
+                </div>
+
+                <div className="flex-1 min-w-0">
+                  <div className={`font-medium truncate ${playingUrl === track.previewUrl ? 'text-green-500' : 'text-white'}`}>
+                    {track.title}
+                  </div>
+                  <div className="text-sm text-gray-400 truncate">
+                    {track.artist}
+                  </div>
+                </div>
+
+                <div className="text-sm text-gray-500 hidden sm:block w-1/3 truncate">
+                  {track.collectionName}
+                </div>
+              </div>
+            ))
+          )}
         </div>
       </main>
     </div>
