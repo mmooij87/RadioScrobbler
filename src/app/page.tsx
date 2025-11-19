@@ -174,9 +174,7 @@ export default function Home() {
                       {track.title}
                     </div>
                     <a
-                      href={`https://open.spotify.com/search/${encodeURIComponent(`${track.artist} ${track.title}`)}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
+                      href={`spotify:search:${encodeURIComponent(`${track.artist} ${track.title}`)}`}
                       className="flex-shrink-0 p-1.5 bg-white/10 hover:bg-white/20 rounded-full transition-colors"
                       title="Open in Spotify"
                     >
