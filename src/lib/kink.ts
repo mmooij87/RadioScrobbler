@@ -1,4 +1,4 @@
-import { Track } from "@/app/api/playlist/route";
+import { Track } from "@/types/track";
 
 export async function fetchPlaylist(): Promise<Track[]> {
     try {

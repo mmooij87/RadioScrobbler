@@ -1,0 +1,22 @@
+
+> kink-scrobbler@0.1.0 build
+> next build
+
+  Γû▓ Next.js 14.2.33
+
+   Creating an optimized production build ...
+ Γ£ô Compiled successfully
+   Linting and checking validity of types ...
+Failed to compile.
+
+./src/app/page.tsx:7:23
+Type error: Cannot find module '@/app/api/playlist/route' or its corresponding type declarations.
+
+   5 | import { Play, Pause, RefreshCw, Music } from "lucide-react";
+   6 | import { fetchPlaylist } from "@/lib/kink";
+>  7 | import { Track } from "@/app/api/playlist/route";
+     |                       ^
+   8 |
+   9 | export default function Home() {
+  10 |   const [tracks, setTracks] = useState<Track[]>([]);
+Next.js build worker exited with code: 1 and signal: null

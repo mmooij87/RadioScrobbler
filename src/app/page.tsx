@@ -4,7 +4,7 @@ import { useEffect, useState, useRef } from "react";
 import Image from "next/image";
 import { Play, Pause, RefreshCw, Music } from "lucide-react";
 import { fetchPlaylist } from "@/lib/kink";
-import { Track } from "@/app/api/playlist/route";
+import { Track } from "@/types/track";
 
 export default function Home() {
   const [tracks, setTracks] = useState<Track[]>([]);
