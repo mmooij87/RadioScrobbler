@@ -22,6 +22,13 @@ export async function fetchPlaylist(): Promise<Track[]> {
             const nextElement = h2.nextElementSibling;
             const title = nextElement?.textContent?.trim() || '';
 
+            // Try to find timestamp - it's usually before the artist name
+            let playedAt = '';
+            const prevElement = h2.previousElementSibling;
+            if (prevElement && /^\d{2}:\d{2}$/.test(prevElement.textContent?.trim() || '')) {
+                playedAt = prevElement.textContent?.trim() || '';
+            }
+
             // Filter out shows (time ranges)
             if (/^\d{2}:\d{2}\s*-\s*\d{2}:\d{2}$/.test(title)) {
                 return;
@@ -32,7 +39,7 @@ export async function fetchPlaylist(): Promise<Track[]> {
             // Filter out long text blocks that are likely not artists
             if (artist.length > 50 || title.length > 100) return;
 
-            tracks.push({ artist, title });
+            tracks.push({ artist, title, playedAt });
         });
 
         // Limit to last 50 tracks

@@ -4,4 +4,5 @@ export interface Track {
     coverUrl?: string;
     previewUrl?: string;
     collectionName?: string;
+    playedAt?: string;
 }

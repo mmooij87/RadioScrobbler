@@ -40,23 +40,34 @@ export default function Home() {
   };
 
   return (
-    <div className="min-h-screen bg-[#121212] text-white font-sans">
+    <div className="min-h-screen bg-gradient-to-br from-[#1a1a1a] via-[#121212] to-[#0a0a0a] text-white font-sans">
       <audio ref={audioRef} onEnded={() => setPlayingUrl(null)} />
 
-      <header className="sticky top-0 z-10 bg-[#121212]/95 backdrop-blur-sm border-b border-white/10 p-6 flex justify-between items-center">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-gradient-to-br from-red-600 to-purple-700 rounded-full flex items-center justify-center">
-            <Music className="w-6 h-6 text-white" />
+      <header className="sticky top-0 z-10 bg-gradient-to-r from-[#E30513] to-[#B00410] shadow-lg border-b border-red-600/20">
+        <div className="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
+          <div className="flex items-center gap-4">
+            <Image
+              src="/kink-logo.png"
+              alt="Kink Radio"
+              width={80}
+              height={40}
+              className="brightness-0 invert"
+              unoptimized
+            />
+            <div className="hidden sm:block">
+              <h1 className="text-xl font-bold tracking-tight">Playlist Scrobbler</h1>
+              <p className="text-sm text-white/80">Now Playing on Kink.nl</p>
+            </div>
           </div>
-          <h1 className="text-2xl font-bold tracking-tight">Kink Scrobbler</h1>
+          <button
+            onClick={loadPlaylist}
+            disabled={loading}
+            className="p-3 hover:bg-white/20 rounded-full transition-all disabled:opacity-50 backdrop-blur-sm"
+            title="Refresh playlist"
+          >
+            <RefreshCw className={`w-5 h-5 ${loading ? 'animate-spin' : ''}`} />
+          </button>
         </div>
-        <button
-          onClick={loadPlaylist}
-          disabled={loading}
-          className="p-2 hover:bg-white/10 rounded-full transition-colors disabled:opacity-50"
-        >
-          <RefreshCw className={`w-5 h-5 ${loading ? 'animate-spin' : ''}`} />
-        </button>
       </header>
 
       <main className="p-6 max-w-7xl mx-auto">
@@ -64,11 +75,12 @@ export default function Home() {
           {loading && tracks.length === 0 ? (
             // Skeletons
             Array.from({ length: 10 }).map((_, i) => (
-              <div key={i} className="flex flex-col gap-3 p-4 rounded-md bg-white/5 animate-pulse">
+              <div key={i} className="flex flex-col gap-3 p-4 rounded-lg bg-white/5 animate-pulse">
                 <div className="aspect-square w-full bg-white/10 rounded-md" />
                 <div className="space-y-2">
                   <div className="h-4 bg-white/10 rounded w-3/4" />
                   <div className="h-3 bg-white/10 rounded w-1/2" />
+                  <div className="h-3 bg-white/10 rounded w-1/4" />
                 </div>
               </div>
             ))
@@ -76,15 +88,15 @@ export default function Home() {
             tracks.map((track, index) => (
               <div
                 key={`${track.artist}-${track.title}-${index}`}
-                className="group flex flex-col gap-3 p-4 rounded-md hover:bg-white/10 transition-colors"
+                className="group flex flex-col gap-3 p-4 rounded-lg bg-gradient-to-br from-white/5 to-white/[0.02] hover:from-white/10 hover:to-white/5 transition-all backdrop-blur-sm border border-white/5 hover:border-white/10"
               >
-                <div className="relative aspect-square w-full bg-[#282828] rounded-md overflow-hidden shadow-lg">
+                <div className="relative aspect-square w-full bg-gradient-to-br from-[#282828] to-[#1a1a1a] rounded-lg overflow-hidden shadow-2xl ring-1 ring-white/10">
                   {track.coverUrl ? (
                     <Image
                       src={track.coverUrl}
                       alt={track.collectionName || "Album Art"}
                       fill
-                      className="object-cover transition-transform group-hover:scale-105"
+                      className="object-cover transition-transform duration-300 group-hover:scale-110"
                       unoptimized
                     />
                   ) : (
@@ -96,24 +108,34 @@ export default function Home() {
                   {track.previewUrl && (
                     <button
                       onClick={() => togglePlay(track.previewUrl!)}
-                      className={`absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity ${playingUrl === track.previewUrl ? 'opacity-100 bg-black/60' : ''}`}
+                      className={`absolute inset-0 bg-black/60 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity backdrop-blur-sm ${playingUrl === track.previewUrl ? 'opacity-100 bg-black/70' : ''}`}
                     >
                       {playingUrl === track.previewUrl ? (
-                        <Pause className="w-12 h-12 text-white fill-current" />
+                        <div className="bg-[#E30513] rounded-full p-3 shadow-lg">
+                          <Pause className="w-8 h-8 text-white fill-current" />
+                        </div>
                       ) : (
-                        <Play className="w-12 h-12 text-white fill-current" />
+                        <div className="bg-[#E30513] rounded-full p-3 shadow-lg group-hover:scale-110 transition-transform">
+                          <Play className="w-8 h-8 text-white fill-current ml-0.5" />
+                        </div>
                       )}
                     </button>
                   )}
                 </div>
 
-                <div className="min-w-0">
-                  <div className={`font-bold truncate text-lg ${playingUrl === track.previewUrl ? 'text-green-500' : 'text-white'}`}>
+                <div className="min-w-0 space-y-1">
+                  <div className={`font-bold truncate text-base leading-tight ${playingUrl === track.previewUrl ? 'text-[#E30513]' : 'text-white'}`}>
                     {track.title}
                   </div>
                   <div className="text-sm text-gray-400 truncate">
                     {track.artist}
                   </div>
+                  {track.playedAt && (
+                    <div className="text-xs text-gray-500 flex items-center gap-1">
+                      <span className="w-1 h-1 bg-gray-500 rounded-full"></span>
+                      {track.playedAt}
+                    </div>
+                  )}
                 </div>
               </div>
             ))
