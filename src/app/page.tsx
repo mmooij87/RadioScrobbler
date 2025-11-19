@@ -2,29 +2,30 @@
 
 import { useEffect, useState, useRef } from "react";
 import Image from "next/image";
-import { Play, Pause, RefreshCw, Music } from "lucide-react";
-import { fetchPlaylist } from "@/lib/kink";
+import { Play, Pause, RefreshCw, Music, ChevronDown } from "lucide-react";
+import { radioStations, RadioStation } from "@/lib/stations";
 import { Track } from "@/types/track";
 
 export default function Home() {
+  const [selectedStation, setSelectedStation] = useState<RadioStation>(radioStations[0]);
   const [tracks, setTracks] = useState<Track[]>([]);
   const [loading, setLoading] = useState(true);
   const [playingUrl, setPlayingUrl] = useState<string | null>(null);
+  const [showDropdown, setShowDropdown] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
   const loadPlaylist = async () => {
     setLoading(true);
-    const data = await fetchPlaylist();
+    const data = await selectedStation.fetchPlaylist();
     setTracks(data);
     setLoading(false);
   };
 
   useEffect(() => {
     loadPlaylist();
-    // Refresh every minute
     const interval = setInterval(loadPlaylist, 60000);
     return () => clearInterval(interval);
-  }, []);
+  }, [selectedStation]);
 
   const togglePlay = (url: string) => {
     if (playingUrl === url) {
@@ -39,24 +40,70 @@ export default function Home() {
     }
   };
 
+  const handleStationChange = (station: RadioStation) => {
+    setSelectedStation(station);
+    setShowDropdown(false);
+    setPlayingUrl(null);
+    audioRef.current?.pause();
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#1a1a1a] via-[#121212] to-[#0a0a0a] text-white font-sans">
       <audio ref={audioRef} onEnded={() => setPlayingUrl(null)} />
 
-      <header className="sticky top-0 z-10 bg-gradient-to-r from-[#E30513] to-[#B00410] shadow-lg border-b border-red-600/20">
+      <header
+        className="sticky top-0 z-10 shadow-lg border-b border-opacity-20"
+        style={{
+          background: `linear-gradient(to right, ${selectedStation.color}, ${selectedStation.color}dd)`,
+          borderColor: selectedStation.color
+        }}
+      >
         <div className="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
           <div className="flex items-center gap-4">
-            <Image
-              src="/kink-logo.png"
-              alt="Kink Radio"
-              width={80}
-              height={40}
-              className="brightness-0 invert"
-              unoptimized
-            />
+            {/* Station Selector */}
+            <div className="relative">
+              <button
+                onClick={() => setShowDropdown(!showDropdown)}
+                className="flex items-center gap-2 px-4 py-2 bg-white/10 hover:bg-white/20 rounded-lg transition-all backdrop-blur-sm"
+              >
+                <Image
+                  src={selectedStation.logoPath}
+                  alt={selectedStation.name}
+                  width={60}
+                  height={30}
+                  className="brightness-0 invert"
+                  unoptimized
+                />
+                <ChevronDown className={`w-4 h-4 transition-transform ${showDropdown ? 'rotate-180' : ''}`} />
+              </button>
+
+              {showDropdown && (
+                <div className="absolute top-full mt-2 left-0 bg-[#1a1a1a] rounded-lg shadow-2xl border border-white/10 overflow-hidden min-w-[200px]">
+                  {radioStations.map((station) => (
+                    <button
+                      key={station.id}
+                      onClick={() => handleStationChange(station)}
+                      className={`w-full px-4 py-3 text-left hover:bg-white/10 transition-colors flex items-center gap-3 ${selectedStation.id === station.id ? 'bg-white/5' : ''
+                        }`}
+                    >
+                      <Image
+                        src={station.logoPath}
+                        alt={station.name}
+                        width={50}
+                        height={25}
+                        className="brightness-0 invert"
+                        unoptimized
+                      />
+                      <span className="text-sm">{station.name}</span>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+
             <div className="hidden sm:block">
               <h1 className="text-xl font-bold tracking-tight">Playlist Scrobbler</h1>
-              <p className="text-sm text-white/80">Now Playing on Kink.nl</p>
+              <p className="text-sm text-white/80">Now Playing on {selectedStation.name}</p>
             </div>
           </div>
           <button
@@ -73,7 +120,6 @@ export default function Home() {
       <main className="p-6 max-w-7xl mx-auto">
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6">
           {loading && tracks.length === 0 ? (
-            // Skeletons
             Array.from({ length: 10 }).map((_, i) => (
               <div key={i} className="flex flex-col gap-3 p-4 rounded-lg bg-white/5 animate-pulse">
                 <div className="aspect-square w-full bg-white/10 rounded-md" />
@@ -111,11 +157,17 @@ export default function Home() {
                       className={`absolute inset-0 bg-black/60 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity backdrop-blur-sm ${playingUrl === track.previewUrl ? 'opacity-100 bg-black/70' : ''}`}
                     >
                       {playingUrl === track.previewUrl ? (
-                        <div className="bg-[#E30513] rounded-full p-3 shadow-lg">
+                        <div
+                          className="rounded-full p-3 shadow-lg"
+                          style={{ backgroundColor: selectedStation.color }}
+                        >
                           <Pause className="w-8 h-8 text-white fill-current" />
                         </div>
                       ) : (
-                        <div className="bg-[#E30513] rounded-full p-3 shadow-lg group-hover:scale-110 transition-transform">
+                        <div
+                          className="rounded-full p-3 shadow-lg group-hover:scale-110 transition-transform"
+                          style={{ backgroundColor: selectedStation.color }}
+                        >
                           <Play className="w-8 h-8 text-white fill-current ml-0.5" />
                         </div>
                       )}
@@ -124,7 +176,10 @@ export default function Home() {
                 </div>
 
                 <div className="min-w-0 space-y-1">
-                  <div className={`font-bold truncate text-base leading-tight ${playingUrl === track.previewUrl ? 'text-[#E30513]' : 'text-white'}`}>
+                  <div
+                    className={`font-bold truncate text-base leading-tight ${playingUrl === track.previewUrl ? '' : 'text-white'}`}
+                    style={{ color: playingUrl === track.previewUrl ? selectedStation.color : undefined }}
+                  >
                     {track.title}
                   </div>
                   <div className="text-sm text-gray-400 truncate">
