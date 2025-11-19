@@ -95,6 +95,80 @@ export async function fetchSublimePlaylist(): Promise<Track[]> {
     }
 }
 
+export async function fetchKEXPPlaylist(): Promise<Track[]> {
+    try {
+        const proxyUrl = 'https://corsproxy.io/?' + encodeURIComponent('https://onlineradiobox.com/us/kexpfm/playlist/?cs=nl.bangsajawa');
+        const response = await fetch(proxyUrl);
+
+        if (!response.ok) {
+            throw new Error(`Failed to fetch KEXP: ${response.statusText}`);
+        }
+
+        const html = await response.text();
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(html, 'text/html');
+
+        const tracks: Track[] = [];
+        const trackLinks = doc.querySelectorAll('a[href*="/track/"]');
+
+        trackLinks.forEach((link) => {
+            const fullText = link.textContent?.trim() || '';
+            const parts = fullText.split(' - ');
+            if (parts.length >= 2) {
+                const artist = parts[0].trim();
+                const title = parts.slice(1).join(' - ').trim();
+
+                if (artist && title && artist.length > 0 && title.length > 0) {
+                    tracks.push({ artist, title });
+                }
+            }
+        });
+
+        const recentTracks = tracks.slice(0, 50);
+        return await enrichWithMetadata(recentTracks);
+    } catch (error) {
+        console.error('Error scraping KEXP playlist:', error);
+        return [];
+    }
+}
+
+export async function fetchBBCRadio6Playlist(): Promise<Track[]> {
+    try {
+        const proxyUrl = 'https://corsproxy.io/?' + encodeURIComponent('https://onlineradiobox.com/uk/bbcradio6/playlist/?cs=nl.bangsajawa');
+        const response = await fetch(proxyUrl);
+
+        if (!response.ok) {
+            throw new Error(`Failed to fetch BBC Radio 6: ${response.statusText}`);
+        }
+
+        const html = await response.text();
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(html, 'text/html');
+
+        const tracks: Track[] = [];
+        const trackLinks = doc.querySelectorAll('a[href*="/track/"]');
+
+        trackLinks.forEach((link) => {
+            const fullText = link.textContent?.trim() || '';
+            const parts = fullText.split(' - ');
+            if (parts.length >= 2) {
+                const artist = parts[0].trim();
+                const title = parts.slice(1).join(' - ').trim();
+
+                if (artist && title && artist.length > 0 && title.length > 0) {
+                    tracks.push({ artist, title });
+                }
+            }
+        });
+
+        const recentTracks = tracks.slice(0, 50);
+        return await enrichWithMetadata(recentTracks);
+    } catch (error) {
+        console.error('Error scraping BBC Radio 6 playlist:', error);
+        return [];
+    }
+}
+
 async function enrichWithMetadata(tracks: Track[]): Promise<Track[]> {
     const tracksWithMetadata = await Promise.all(
         tracks.map(async (track) => {
@@ -138,5 +212,19 @@ export const radioStations: RadioStation[] = [
         color: '#FF6B00',
         logoPath: '/sublime-logo.png',
         fetchPlaylist: fetchSublimePlaylist,
+    },
+    {
+        id: 'kexp',
+        name: 'KEXP',
+        color: '#00A1DE',
+        logoPath: '/kexp-logo.png',
+        fetchPlaylist: fetchKEXPPlaylist,
+    },
+    {
+        id: 'bbc6',
+        name: 'BBC Radio 6',
+        color: '#FF6600',
+        logoPath: '/bbc6-logo.png',
+        fetchPlaylist: fetchBBCRadio6Playlist,
     },
 ];
