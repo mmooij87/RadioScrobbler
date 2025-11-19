@@ -177,7 +177,7 @@ export default function Home() {
                       href={`https://open.spotify.com/search/${encodeURIComponent(`${track.artist} ${track.title}`)}`}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="flex-shrink-0 p-1.5 bg-[#1DB954] hover:bg-[#1ed760] rounded-full transition-colors"
+                      className="flex-shrink-0 p-1.5 bg-white/10 hover:bg-white/20 rounded-full transition-colors"
                       title="Open in Spotify"
                     >
                       <svg className="w-4 h-4 text-white" viewBox="0 0 24 24" fill="currentColor">
