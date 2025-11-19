@@ -68,17 +68,20 @@ export async function fetchSublimePlaylist(): Promise<Track[]> {
         const doc = parser.parseFromString(html, 'text/html');
 
         const tracks: Track[] = [];
-        const trackElements = doc.querySelectorAll('td.track__name-desktop a');
 
-        trackElements.forEach((element) => {
-            const fullText = element.textContent?.trim() || '';
+        // Find all links that point to track pages
+        const trackLinks = doc.querySelectorAll('a[href*="/track/"]');
+
+        trackLinks.forEach((link) => {
+            const fullText = link.textContent?.trim() || '';
             // Format is usually "Artist - Title"
             const parts = fullText.split(' - ');
             if (parts.length >= 2) {
                 const artist = parts[0].trim();
                 const title = parts.slice(1).join(' - ').trim();
 
-                if (artist && title) {
+                // Filter out empty or invalid entries
+                if (artist && title && artist.length > 0 && title.length > 0) {
                     tracks.push({ artist, title });
                 }
             }
